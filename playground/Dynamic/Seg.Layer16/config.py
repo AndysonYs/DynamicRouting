@@ -5,7 +5,7 @@ from dl_lib.configs.segm_config import SemanticSegmentationConfig
 _config_dict = dict(
     MODEL=dict(
         WEIGHTS="",
-        CAL_FLOPS=True,
+        CAL_FLOPS=False,
         BACKBONE=dict(
             CELL_TYPE=['sep_conv_3x3', 'skip_connect'],
             LAYER_NUM=16,
@@ -13,7 +13,7 @@ _config_dict = dict(
             INIT_CHANNEL=64,
             MAX_STRIDE=32,
             SEPT_STEM=True,
-            NORM="nnSyncBN",
+            NORM="BN",
             DROP_PROB=0.0,
         ),
         GATE=dict(
@@ -25,7 +25,7 @@ _config_dict = dict(
             IN_FEATURES=['layer_0', 'layer_1', 'layer_2', 'layer_3'],
             NUM_CLASSES=19,
             IGNORE_VALUE=255,
-            NORM="nnSyncBN",
+            NORM="BN",
             LOSS_WEIGHT=1.0,
         ),
         BUDGET=dict(
@@ -48,7 +48,7 @@ _config_dict = dict(
             MAX_ITER=190000,
         ),
         OPTIMIZER=dict(BASE_LR=0.05, ),
-        IMS_PER_BATCH=8,
+        IMS_PER_BATCH=2,
         CHECKPOINT_PERIOD=5000,
         GRAD_CLIP=5.0,
     ),
@@ -64,7 +64,7 @@ _config_dict = dict(
     ),
     TEST=dict(
         AUG=dict(
-            ENABLED=False,
+            ENABLED=True,
             MIN_SIZES=(512, 768, 1024, 1280, 1536, 2048, ),
             MAX_SIZE=4096,
             FLIP=True,
@@ -72,7 +72,7 @@ _config_dict = dict(
         PRECISE_BN=dict(ENABLED=True),
     ),
     OUTPUT_DIR=osp.join(
-        '/data/Outputs/model_logs/dl_lib_playground',
+        '/home/shuaiyang/projects/16_dynamic_routing/DynamicRouting/dl_lib_playground',
         osp.split(osp.realpath(__file__))[0].split("playground/")[-1]),
 )
 

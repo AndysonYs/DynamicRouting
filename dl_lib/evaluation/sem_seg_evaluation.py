@@ -14,7 +14,7 @@ from dl_lib.data import DatasetCatalog, MetadataCatalog
 from dl_lib.utils.comm import all_gather, is_main_process, synchronize
 from cityscapesscripts.helpers.labels import trainId2label
 from .evaluator import DatasetEvaluator
-
+from SMore_seg.common.constants import SegmentationModelOutputConstants
 
 class SemSegEvaluator(DatasetEvaluator):
     """
@@ -71,12 +71,14 @@ class SemSegEvaluator(DatasetEvaluator):
                 (Tensor [H, W]) or list of dicts with key "sem_seg" that contains semantic
                 segmentation prediction in the same format.
         """
-        for input, output in zip(inputs, outputs):
-            if "flops" in output:
-                flops = output["flops"]
-                self._real_flops.append(flops["real_flops"])
-                self._expt_flops.append(flops["expt_flops"])
-            output = output["sem_seg"].argmax(dim=0).to(self._cpu_device)
+        for input, output in zip(inputs, outputs[SegmentationModelOutputConstants.PREDICT_SCORES]):
+            # if "flops" in output:
+            #     flops = output["flops"]
+            #     self._real_flops.append(flops["real_flops"])
+            #     self._expt_flops.append(flops["expt_flops"])
+
+            # output = output["sem_seg"].argmax(dim=0).to(self._cpu_device)
+            output = output.argmax(dim=0).to(self._cpu_device)
             pred = np.array(output, dtype=np.int)
             # Cityscapes test output
             if 'cityscapes' in self._dataset_name and 'test' in self._dataset_name:
@@ -94,7 +96,7 @@ class SemSegEvaluator(DatasetEvaluator):
                 cv2.imwrite(os.path.join(save_dir, f_name), pred_converg)
 
             with PathManager.open(
-                self.input_file_to_gt_file[input["file_name"]], "rb"
+                self.input_file_to_gt_file[inputs["file_name"]], "rb"
             ) as f:
                 gt = np.array(Image.open(f), dtype=np.int)
 
@@ -104,7 +106,7 @@ class SemSegEvaluator(DatasetEvaluator):
                 self._N * pred.reshape(-1) + gt.reshape(-1), minlength=self._N ** 2
             ).reshape(self._N, self._N)
 
-            self._predictions.extend(self.encode_json_sem_seg(pred, input["file_name"]))
+            self._predictions.extend(self.encode_json_sem_seg(pred, inputs["file_name"]))
 
     def evaluate(self):
         """

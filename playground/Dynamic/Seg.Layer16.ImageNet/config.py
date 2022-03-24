@@ -75,7 +75,7 @@ _config_dict = dict(
         PRECISE_BN=dict(ENABLED=True),
     ),
     OUTPUT_DIR=osp.join(
-        '/data/Outputs/model_logs/dl_lib_playground',
+        '/home/shuaiyang/projects/16_dynamic_routing/DynamicRouting/dl_lib_playground',
         osp.split(osp.realpath(__file__))[0].split("playground/")[-1]),
 )
 

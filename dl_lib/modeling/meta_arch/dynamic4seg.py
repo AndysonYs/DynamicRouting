@@ -33,6 +33,7 @@ class DynamicNet4Seg(nn.Module):
             -1, 1, 1)
         self.normalizer = lambda x: (x - pixel_mean) / pixel_std
         self.budget_constrint = BudgetConstraint(cfg)
+        self.cal_flops = cfg.MODEL.CAL_FLOPS
         self.to(self.device)
 
     def forward(self, batched_inputs, step_rate=0.0):
@@ -72,7 +73,8 @@ class DynamicNet4Seg(nn.Module):
 
         results, losses = self.sem_seg_head(features, targets)
         # calculate flops
-        real_flops += self.sem_seg_head.flops
+        if self.cal_flops:
+            real_flops += self.sem_seg_head.flops
         flops = {'real_flops': real_flops, 'expt_flops': expt_flops}
         # use budget constraint for training
         if self.training:
@@ -141,12 +143,13 @@ class SemSegDecoderHead(nn.Module):
                               bias=False,
                               norm=get_norm(norm, out_channel),
                               activation=nn.ReLU())
-            self.real_flops += cal_op_flops.count_ConvBNReLU_flop(
-                res_size[0],
-                res_size[1],
-                in_channel,
-                out_channel, [1, 1],
-                is_affine=affine)
+            if self.cal_flops:
+                self.real_flops += cal_op_flops.count_ConvBNReLU_flop(
+                    res_size[0],
+                    res_size[1],
+                    in_channel,
+                    out_channel, [1, 1],
+                    is_affine=affine)
             self.layer_decoder_list.append(conv_1x1)
         # using Kaiming init
         for layer in self.layer_decoder_list:
@@ -158,9 +161,10 @@ class SemSegDecoderHead(nn.Module):
                                 kernel_size=3,
                                 stride=1,
                                 padding=1)
-        self.real_flops += cal_op_flops.count_Conv_flop(
-            feature_resolution['layer_0'][0], feature_resolution['layer_0'][1],
-            in_channel, num_classes, [3, 3])
+        if self.cal_flops:
+            self.real_flops += cal_op_flops.count_Conv_flop(
+                feature_resolution['layer_0'][0], feature_resolution['layer_0'][1],
+                in_channel, num_classes, [3, 3])
         # using Kaiming init
         weight_init.kaiming_init_module(self.predictor, mode='fan_in')
 

@@ -120,6 +120,8 @@ def inference_on_dataset(model, data_loader, evaluator):
                 total_compute_time = 0
 
             start_compute_time = time.time()
+            inputs = inputs[0]
+            inputs['img'] = torch.unsqueeze(inputs.pop('image'), 0)
             outputs = model(inputs)
             if torch.cuda.is_available():
                 torch.cuda.synchronize()
